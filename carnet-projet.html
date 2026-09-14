@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Carnet de projet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #F1F0EA;
+    --paper: #FBFAF6;
+    --ink: #202422;
+    --ink-soft: #5B615D;
+    --line: #D8D5C9;
+    --margin-red: #B5493A;
+    --amber: #D9A441;
+    --teal: #2F6F62;
+    --teal-dark: #1E4B41;
+    --done: #93A399;
+    --radius: 3px;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .app{ max-width: 960px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  header.top{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom: 18px; gap: 16px; flex-wrap: wrap;
+  }
+  header.top h1{
+    font-family:'Source Serif 4', serif; font-weight:700; font-size: 1.7rem;
+    margin:0; letter-spacing: -0.01em;
+  }
+  header.top .who{ font-family:'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--ink-soft); }
+  header.top .who button{
+    font-family: inherit; font-size: inherit; border:none; background:none;
+    color: var(--teal-dark); text-decoration: underline; cursor:pointer; padding:0; margin-left:6px;
+  }
+
+  nav.tabs{ display:flex; gap: 2px; margin-bottom: 0; padding-left: 4px; }
+  nav.tabs button{
+    font-family:'Source Serif 4', serif; font-size: 0.95rem; font-weight:600;
+    padding: 9px 18px 8px; border:none; cursor:pointer;
+    background: var(--line); color: var(--ink-soft);
+    border-radius: 8px 8px 0 0; position:relative; top:1px;
+  }
+  nav.tabs button.active{ background: var(--paper); color: var(--ink); box-shadow: 0 -1px 0 var(--paper); }
+
+  .page{
+    background: var(--paper);
+    border-radius: 0 6px 6px 6px;
+    border: 1px solid var(--line);
+    padding: 26px 26px 26px 54px;
+    position: relative;
+    min-height: 420px;
+    background-image: repeating-linear-gradient(to bottom, transparent, transparent 30px, var(--line) 31px);
+    background-position: 0 8px;
+  }
+  .page::before{
+    content:""; position:absolute; left: 34px; top:0; bottom:0; width:1px;
+    background: var(--margin-red); opacity: 0.55;
+  }
+
+  section.panel{ display:none; }
+  section.panel.active{ display:block; }
+
+  h2.section-title{ font-family:'Source Serif 4', serif; font-size: 1.15rem; font-weight:700; margin: 0 0 14px; }
+
+  /* --- Dashboard --- */
+  .stats{ display:flex; gap: 18px; flex-wrap:wrap; margin-bottom: 22px; }
+  .stat{ min-width: 130px; }
+  .stat .n{ font-family:'Source Serif 4', serif; font-size: 2rem; font-weight:700; line-height:1; }
+  .stat .l{ font-size: 0.78rem; color: var(--ink-soft); margin-top: 4px; }
+  .upcoming .empty, .list .empty{ color: var(--ink-soft); font-style: italic; font-size: 0.9rem; }
+  .upcoming-item{ display:flex; justify-content:space-between; padding: 6px 0; border-bottom: 1px dashed var(--line); font-size:0.92rem; }
+  .upcoming-item .due{ font-family:'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--teal-dark); }
+
+  /* --- Forms --- */
+  form.inline{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 18px; align-items:center; }
+  form.inline input, form.inline select, form.inline textarea{
+    font-family:'Inter',sans-serif; font-size: 0.88rem;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 7px 9px; background: #fff;
+  }
+  form.inline input[type=text]{ flex:1; min-width: 160px; }
+  form.inline textarea{ width:100%; min-height: 50px; font-family: inherit; }
+  .btn, form.inline button{
+    font-family:'Inter',sans-serif; font-weight:600; font-size: 0.85rem;
+    background: var(--teal-dark); color:#fff; border:none; border-radius: var(--radius);
+    padding: 8px 14px; cursor:pointer;
+  }
+  .btn:hover, form.inline button:hover{ background: var(--teal); }
+  .btn.ghost{ background:none; color: var(--teal-dark); border: 1px solid var(--line); }
+  .btn.ghost:hover{ background: #EFEDE3; }
+  .btn.small{ font-size:0.76rem; padding: 4px 9px; }
+
+  /* --- Tasks --- */
+  .task-list{ list-style:none; margin:0; padding:0; }
+  .task{ padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .task .row{ display:flex; align-items:flex-start; gap:10px; }
+  .task input[type=checkbox]{ margin-top: 3px; width:16px; height:16px; accent-color: var(--teal-dark); cursor:pointer; }
+  .task .body{ flex:1; }
+  .task .title{ font-weight:500; }
+  .task.done .title{ text-decoration: line-through; color: var(--done); }
+  .task .meta{ font-family:'IBM Plex Mono', monospace; font-size: 0.74rem; color: var(--ink-soft); margin-top:2px; }
+  .task .del{ background:none; border:none; color: var(--margin-red); cursor:pointer; font-size:1rem; opacity:0.6; }
+  .task .del:hover{ opacity:1; }
+  .tag{ display:inline-block; background: #EAE6D8; color: var(--teal-dark); font-size:0.72rem; padding:1px 7px; border-radius: 10px; margin-right:4px; font-family:'IBM Plex Mono',monospace; }
+  .type-pill{ display:inline-block; background: var(--teal-dark); color:#fff; font-size:0.68rem; padding:1px 8px; border-radius: 10px; margin-right:6px; font-family:'IBM Plex Mono',monospace; text-transform:lowercase; }
+
+  /* --- Comments (shared: tasks + biblio) --- */
+  .comment-toggle{ background:none; border:none; color: var(--ink-soft); font-size:0.76rem; cursor:pointer; padding:0; margin-top:6px; text-decoration: underline; }
+  .comments{ margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--line); display:none; }
+  .comments.open{ display:block; }
+  .comment{ font-size: 0.85rem; padding: 4px 0; }
+  .comment .author{ font-weight:600; }
+  .comment .at{ font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color: var(--ink-soft); margin-left:6px; }
+  .comment-form{ display:flex; gap:6px; margin-top:6px; }
+  .comment-form input{ flex:1; font-size:0.82rem; padding:5px 8px; border:1px solid var(--line); border-radius: var(--radius); }
+  .comment-form button{ font-size:0.78rem; padding:5px 10px; }
+
+  /* --- Biblio --- */
+  .biblio-card{ padding: 12px 0; border-bottom: 1px dashed var(--line); }
+  .biblio-card .ref-title{ font-weight:600; font-size:0.95rem; }
+  .biblio-card .authors{ color: var(--ink-soft); font-size: 0.85rem; font-style: italic; }
+  .biblio-card .meta{ font-family:'IBM Plex Mono', monospace; font-size:0.74rem; color: var(--teal-dark); margin-top:2px; }
+  .biblio-card .notes{ font-size:0.86rem; margin-top:5px; }
+  .biblio-card a{ color: var(--teal-dark); }
+  .biblio-card .row{ display:flex; justify-content:space-between; gap:10px; }
+
+  /* --- Notes / reports (block editor) --- */
+  .note-card{ border-bottom: 1px solid var(--line); padding: 16px 0 20px; }
+  .note-card .note-title{ font-family:'Source Serif 4', serif; font-weight:700; font-size:1.05rem; display:flex; justify-content:space-between; align-items:baseline; margin-bottom: 8px; }
+  .note-card .stamp{ font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color: var(--ink-soft); font-weight:400; }
+  .blocks{ display:flex; flex-direction:column; gap: 14px; }
+  .block{ position:relative; }
+  .block .block-actions{ position:absolute; top:0; right:0; display:none; gap:4px; }
+  .block:hover .block-actions{ display:flex; }
+  .block .del-small{ background:#fff; border:1px solid var(--line); border-radius: var(--radius); }
+
+  .block-text textarea.raw{
+    width:100%; min-height: 70px; border:1px solid var(--line); background:#fff;
+    font-family:'Inter',sans-serif; font-size: 0.9rem; resize: vertical; padding:8px 10px;
+    border-radius: var(--radius); margin-bottom:6px;
+  }
+  .rendered{ font-size: 0.94rem; }
+  .rendered h3{ font-family:'Source Serif 4', serif; font-size:1.05rem; margin: 4px 0 4px; }
+  .rendered h4{ font-family:'Source Serif 4', serif; font-size:0.95rem; margin: 4px 0 4px; color: var(--teal-dark); }
+  .rendered ul{ margin: 4px 0; padding-left: 20px; }
+  .rendered code{ background:#EFEDE3; padding:1px 5px; border-radius:3px; font-family:'IBM Plex Mono',monospace; font-size:0.85em; }
+  .rendered strong{ color: var(--teal-dark); }
+
+  figure.sci-figure{
+    margin: 0; border: 1px solid var(--line); background: #fff; border-radius: var(--radius);
+    padding: 10px; text-align:center;
+  }
+  figure.sci-figure img{ max-width:100%; max-height: 320px; display:block; margin: 0 auto 8px; background: #F6F5F0; }
+  figure.sci-figure figcaption{ font-size: 0.82rem; color: var(--ink-soft); text-align:left; }
+  figure.sci-figure figcaption .fig-label{ font-weight:600; color: var(--ink); font-family:'IBM Plex Mono',monospace; font-size:0.76rem; }
+  figure.sci-figure figcaption .scale{ display:inline-block; margin-top:3px; font-family:'IBM Plex Mono',monospace; font-size: 0.74rem; background: var(--amber); color:#3A2C05; padding: 1px 7px; border-radius: 8px; }
+  .block-image .img-edit{ display:flex; flex-direction:column; gap:6px; background:#fff; border:1px solid var(--line); padding:10px; border-radius: var(--radius); margin-bottom:6px; }
+  .block-image .img-edit input{ font-size:0.85rem; padding:6px 8px; border:1px solid var(--line); border-radius: var(--radius); }
+
+  .add-block-row{ display:flex; gap:8px; margin-top: 10px; }
+
+  select{ background:#fff; }
+  .loading{ color: var(--ink-soft); font-style: italic; padding: 20px 0; }
+  ::placeholder{ color: #A6A79A; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Carnet de projet</h1>
+    <div class="who" id="whoBox"></div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="dashboard" class="active">Tableau de bord</button>
+    <button data-tab="tasks">Tâches</button>
+    <button data-tab="biblio">Bibliographie</button>
+    <button data-tab="notes">Méthodes &amp; rapports</button>
+  </nav>
+
+  <div class="page">
+
+    <section class="panel active" id="panel-dashboard">
+      <h2 class="section-title">Où en est le projet</h2>
+      <div class="stats" id="stats"><div class="loading">Chargement…</div></div>
+      <h2 class="section-title" style="margin-top:24px;">Échéances à venir</h2>
+      <div class="upcoming" id="upcoming"></div>
+    </section>
+
+    <section class="panel" id="panel-tasks">
+      <h2 class="section-title">Tâches</h2>
+      <form class="inline" id="taskForm">
+        <input type="text" id="taskTitle" placeholder="Nouvelle tâche…" required>
+        <input type="date" id="taskDue">
+        <select id="taskWho"><option value="">Assigné à…</option></select>
+        <button type="submit">Ajouter</button>
+      </form>
+      <ul class="task-list" id="taskList"><li class="empty">Chargement…</li></ul>
+    </section>
+
+    <section class="panel" id="panel-biblio">
+      <h2 class="section-title">Bibliographie</h2>
+      <form class="inline" id="biblioForm">
+        <input type="text" id="bTitle" placeholder="Titre de l'article/ouvrage" required style="flex-basis:100%;">
+        <select id="bType">
+          <option value="Article">Article</option>
+          <option value="Protocole">Protocole</option>
+          <option value="Livre">Livre</option>
+          <option value="Site web">Site web</option>
+          <option value="Autre">Autre</option>
+        </select>
+        <input type="text" id="bAuthors" placeholder="Auteurs">
+        <input type="text" id="bYear" placeholder="Année" style="max-width:80px;">
+        <input type="text" id="bLink" placeholder="Lien (DOI/URL)">
+        <input type="text" id="bTags" placeholder="Tags (séparés par des virgules)">
+        <textarea id="bNotes" placeholder="Notes / résumé rapide…"></textarea>
+        <button type="submit">Ajouter la référence</button>
+      </form>
+      <div id="biblioList"><div class="empty">Chargement…</div></div>
+    </section>
+
+    <section class="panel" id="panel-notes">
+      <h2 class="section-title">Méthodes &amp; rapports</h2>
+      <p style="font-size:0.85rem;color:var(--ink-soft);margin-top:-8px;">
+        Chaque section accepte des blocs de texte (mise en forme <code>**gras**</code>, <code>*italique*</code>, <code># Titre</code>, <code>- liste</code>) et des blocs image/schéma avec légende et échelle.
+      </p>
+      <form class="inline" id="noteForm">
+        <input type="text" id="noteTitle" placeholder="Titre de la section (ex : Protocole d'extraction)" required>
+        <button type="submit">Créer une section</button>
+      </form>
+      <div id="noteList"><div class="empty">Chargement…</div></div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+const STORE_TASKS = 'tasks';
+const STORE_BIBLIO = 'biblio';
+const STORE_NOTES = 'notes';
+const STORE_NAME = 'username';
+
+let tasks = [];
+let biblio = [];
+let notes = [];
+let myName = '';
+let figCounter = 0;
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function now(){ return new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+
+/* tiny markdown-lite renderer */
+function renderMd(src){
+  const lines = esc(src||'').split('\n');
+  let html = ''; let inList = false;
+  for(let line of lines){
+    if(/^###\s+/.test(line)){ if(inList){html+='</ul>';inList=false;} html += '<h4>'+line.replace(/^###\s+/,'')+'</h4>'; continue; }
+    if(/^#\s+/.test(line)){ if(inList){html+='</ul>';inList=false;} html += '<h3>'+line.replace(/^#\s+/,'')+'</h3>'; continue; }
+    if(/^-\s+/.test(line)){ if(!inList){html+='<ul>';inList=true;} html += '<li>'+line.replace(/^-\s+/,'')+'</li>'; continue; }
+    if(inList){ html += '</ul>'; inList = false; }
+    if(line.trim() === ''){ continue; }
+    html += '<p>'+line+'</p>';
+  }
+  if(inList) html += '</ul>';
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+             .replace(/\*(.+?)\*/g, '<em>$1</em>')
+             .replace(/`(.+?)`/g, '<code>$1</code>');
+  return html || '<p style="color:var(--ink-soft);font-style:italic;">Vide…</p>';
+}
+
+async function safeGet(key, shared){
+  try{ const r = await window.storage.get(key, shared); return r ? JSON.parse(r.value) : null; }
+  catch(e){ return null; }
+}
+async function safeSet(key, value, shared){
+  try{ await window.storage.set(key, JSON.stringify(value), shared); }
+  catch(e){ console.error('storage set failed', key, e); }
+}
+
+async function init(){
+  try{ const r = await window.storage.get(STORE_NAME, false); myName = r ? JSON.parse(r.value) : null; }
+  catch(e){ myName = null; }
+  if(!myName){
+    myName = prompt("Ton prénom (pour identifier tes ajouts) :") || "Anonyme";
+    await safeSet(STORE_NAME, myName, false);
+  }
+  renderWho();
+
+  tasks = (await safeGet(STORE_TASKS, true)) || [];
+  biblio = (await safeGet(STORE_BIBLIO, true)) || [];
+  notes = (await safeGet(STORE_NOTES, true)) || [];
+  tasks.forEach(t => { if(!t.comments) t.comments = []; });
+  biblio.forEach(b => { if(!b.comments) b.comments = []; if(!b.type) b.type = 'Autre'; });
+  notes.forEach(n => { if(!n.blocks) n.blocks = n.content ? [{id:uid(),type:'text',content:n.content}] : []; });
+
+  renderTasks(); renderBiblio(); renderNotes(); renderDashboard(); populateAssignee();
+}
+
+function renderWho(){
+  document.getElementById('whoBox').innerHTML =
+    `Connecté·e comme <strong>${esc(myName)}</strong> <button id="changeNameBtn">changer</button>`;
+  document.getElementById('changeNameBtn').onclick = async () => {
+    const n = prompt("Ton prénom :", myName);
+    if(n){ myName = n; await safeSet(STORE_NAME, myName, false); renderWho(); }
+  };
+}
+
+function populateAssignee(){
+  const names = new Set([myName]);
+  tasks.forEach(t => { if(t.who) names.add(t.who); });
+  const sel = document.getElementById('taskWho');
+  sel.innerHTML = '<option value="">Assigné à…</option>' +
+    [...names].map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('') +
+    '<option value="__new__">Autre…</option>';
+}
+
+document.getElementById('tabs').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tab]');
+  if(!btn) return;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+});
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n">${pct}%</div><div class="l">tâches terminées (${done}/${total})</div></div>
+    <div class="stat"><div class="n">${biblio.length}</div><div class="l">références</div></div>
+    <div class="stat"><div class="n">${notes.length}</div><div class="l">sections de notes</div></div>
+  `;
+  const upcoming = tasks.filter(t => !t.done && t.due).sort((a,b) => a.due.localeCompare(b.due)).slice(0,5);
+  const box = document.getElementById('upcoming');
+  box.innerHTML = upcoming.length ? upcoming.map(t => `
+    <div class="upcoming-item"><span>${esc(t.title)}${t.who ? ' — <em>'+esc(t.who)+'</em>' : ''}</span><span class="due">${t.due}</span></div>
+  `).join('') : '<div class="empty">Aucune échéance planifiée.</div>';
+}
+
+/* ---------- Tasks ---------- */
+document.getElementById('taskForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  let who = document.getElementById('taskWho').value;
+  if(who === '__new__'){ who = prompt('Nom :') || ''; }
+  const t = { id: uid(), title: document.getElementById('taskTitle').value.trim(),
+    due: document.getElementById('taskDue').value, who, done: false, createdBy: myName, comments: [] };
+  if(!t.title) return;
+  tasks.push(t);
+  await safeSet(STORE_TASKS, tasks, true);
+  e.target.reset();
+  renderTasks(); renderDashboard(); populateAssignee();
+});
+
+function commentsHtml(items, parentType, parentId){
+  const list = items.map(c => `<div class="comment"><span class="author">${esc(c.author)}</span><span class="at">${esc(c.at)}</span><div>${esc(c.text)}</div></div>`).join('');
+  return `
+    <button class="comment-toggle" data-open="${parentType}-${parentId}">💬 ${items.length} commentaire${items.length>1?'s':''}</button>
+    <div class="comments" id="comments-${parentType}-${parentId}">
+      ${list || '<div class="empty" style="font-size:0.8rem;">Aucun commentaire.</div>'}
+      <div class="comment-form">
+        <input type="text" placeholder="Ajouter un commentaire…" data-ctype="${parentType}" data-cid="${parentId}">
+        <button data-send="${parentType}-${parentId}">Envoyer</button>
+      </div>
+    </div>`;
+}
+
+function renderTasks(){
+  const list = document.getElementById('taskList');
+  if(!tasks.length){ list.innerHTML = '<li class="empty">Aucune tâche pour l\u2019instant.</li>'; return; }
+  const sorted = [...tasks].sort((a,b) => (a.done - b.done) || (a.due||'9999').localeCompare(b.due||'9999'));
+  list.innerHTML = sorted.map(t => `
+    <li class="task ${t.done ? 'done':''}" data-id="${t.id}">
+      <div class="row">
+        <input type="checkbox" ${t.done?'checked':''}>
+        <div class="body">
+          <div class="title">${esc(t.title)}</div>
+          <div class="meta">${t.who ? esc(t.who)+' · ' : ''}${t.due ? 'échéance '+t.due : 'pas d\u2019échéance'}</div>
+          ${commentsHtml(t.comments||[], 'task', t.id)}
+        </div>
+        <button class="del">✕</button>
+      </div>
+    </li>
+  `).join('');
+}
+
+document.getElementById('taskList').addEventListener('click', async e => {
+  const li = e.target.closest('li.task');
+  if(!li) return;
+  const id = li.dataset.id;
+  if(e.target.matches('input[type=checkbox]')){
+    const t = tasks.find(x => x.id === id); t.done = e.target.checked;
+    await safeSet(STORE_TASKS, tasks, true); renderTasks(); renderDashboard();
+  } else if(e.target.classList.contains('del')){
+    tasks = tasks.filter(x => x.id !== id);
+    await safeSet(STORE_TASKS, tasks, true); renderTasks(); renderDashboard();
+  } else if(e.target.classList.contains('comment-toggle')){
+    document.getElementById('comments-'+e.target.dataset.open).classList.toggle('open');
+  } else if(e.target.dataset.send){
+    const input = li.querySelector(`input[data-ctype][data-cid="${id}"]`);
+    const text = input.value.trim(); if(!text) return;
+    const t = tasks.find(x => x.id === id);
+    t.comments.push({id:uid(), author: myName, text, at: now()});
+    await safeSet(STORE_TASKS, tasks, true); renderTasks();
+    document.getElementById('comments-task-'+id).classList.add('open');
+  }
+});
+
+/* ---------- Biblio ---------- */
+document.getElementById('biblioForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const b = { id: uid(), title: document.getElementById('bTitle').value.trim(),
+    type: document.getElementById('bType').value,
+    authors: document.getElementById('bAuthors').value.trim(),
+    year: document.getElementById('bYear').value.trim(),
+    link: document.getElementById('bLink').value.trim(),
+    tags: document.getElementById('bTags').value.split(',').map(s=>s.trim()).filter(Boolean),
+    notes: document.getElementById('bNotes').value.trim(),
+    addedBy: myName, comments: [] };
+  if(!b.title) return;
+  biblio.unshift(b);
+  await safeSet(STORE_BIBLIO, biblio, true);
+  e.target.reset();
+  renderBiblio(); renderDashboard();
+});
+
+function renderBiblio(){
+  const box = document.getElementById('biblioList');
+  if(!biblio.length){ box.innerHTML = '<div class="empty">Aucune référence pour l\u2019instant.</div>'; return; }
+  box.innerHTML = biblio.map(b => `
+    <div class="biblio-card" data-id="${b.id}">
+      <div class="row">
+        <div>
+          <span class="type-pill">${esc(b.type||'Autre')}</span>
+          <div class="ref-title" style="display:inline;">${b.link ? `<a href="${esc(b.link)}" target="_blank" rel="noopener">${esc(b.title)}</a>` : esc(b.title)}</div>
+          ${b.authors ? `<div class="authors">${esc(b.authors)}${b.year ? ' · '+esc(b.year) : ''}</div>` : (b.year ? `<div class="authors">${esc(b.year)}</div>` : '')}
+        </div>
+        <button class="del-small">✕</button>
+      </div>
+      ${b.tags && b.tags.length ? `<div style="margin-top:5px;">${b.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+      ${b.notes ? `<div class="notes">${esc(b.notes)}</div>` : ''}
+      <div class="meta">ajouté par ${esc(b.addedBy||'?')}</div>
+      ${commentsHtml(b.comments||[], 'biblio', b.id)}
+    </div>
+  `).join('');
+}
+
+document.getElementById('biblioList').addEventListener('click', async e => {
+  const card = e.target.closest('.biblio-card');
+  if(!card) return;
+  const id = card.dataset.id;
+  if(e.target.classList.contains('del-small')){
+    biblio = biblio.filter(x => x.id !== id);
+    await safeSet(STORE_BIBLIO, biblio, true); renderBiblio(); renderDashboard();
+  } else if(e.target.classList.contains('comment-toggle')){
+    document.getElementById('comments-'+e.target.dataset.open).classList.toggle('open');
+  } else if(e.target.dataset.send){
+    const input = card.querySelector(`input[data-ctype][data-cid="${id}"]`);
+    const text = input.value.trim(); if(!text) return;
+    const b = biblio.find(x => x.id === id);
+    b.comments.push({id:uid(), author: myName, text, at: now()});
+    await safeSet(STORE_BIBLIO, biblio, true); renderBiblio();
+    document.getElementById('comments-biblio-'+id).classList.add('open');
+  }
+});
+
+/* ---------- Notes (block editor) ---------- */
+document.getElementById('noteForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const title = document.getElementById('noteTitle').value.trim();
+  if(!title) return;
+  notes.unshift({ id: uid(), title, blocks: [], updatedBy: myName, updatedAt: now() });
+  await safeSet(STORE_NOTES, notes, true);
+  e.target.reset();
+  renderNotes(); renderDashboard();
+});
+
+function blockHtml(block){
+  if(block.type === 'text'){
+    return `
+      <div class="block block-text" data-bid="${block.id}">
+        <div class="block-actions"><button class="del-small" data-delblock="${block.id}">✕</button></div>
+        <textarea class="raw" placeholder="Écrire ici… (# Titre, **gras**, *italique*, - liste)">${esc(block.content||'')}</textarea>
+        <div class="rendered">${renderMd(block.content||'')}</div>
+      </div>`;
+  }
+  figCounter++;
+  const label = 'Fig. ' + figCounter;
+  return `
+    <div class="block block-image" data-bid="${block.id}">
+      <div class="block-actions"><button class="del-small" data-delblock="${block.id}">✕</button></div>
+      <div class="img-edit">
+        <input type="text" data-field="url" placeholder="URL de l'image / du schéma" value="${esc(block.url||'')}">
+        <input type="text" data-field="caption" placeholder="Légende (ex : Coupe transversale de la tige, x40)" value="${esc(block.caption||'')}">
+        <input type="text" data-field="scale" placeholder="Échelle (ex : 1 cm = 10 µm, ou grossissement x40)" value="${esc(block.scale||'')}">
+      </div>
+      <figure class="sci-figure">
+        ${block.url ? `<img src="${esc(block.url)}" alt="${esc(block.caption||'')}">` : `<div style="padding:30px;color:var(--ink-soft);font-style:italic;">Ajoute une URL d'image ci-dessus…</div>`}
+        <figcaption><span class="fig-label">${label}</span> — ${esc(block.caption||'sans légende')}${block.scale ? `<span class="scale">${esc(block.scale)}</span>` : ''}</figcaption>
+      </figure>
+    </div>`;
+}
+
+function renderNotes(){
+  const box = document.getElementById('noteList');
+  if(!notes.length){ box.innerHTML = '<div class="empty">Aucune section pour l\u2019instant.</div>'; return; }
+  figCounter = 0;
+  box.innerHTML = notes.map(n => `
+    <div class="note-card" data-id="${n.id}">
+      <div class="note-title">
+        <span>${esc(n.title)} <span class="stamp">— maj par ${esc(n.updatedBy||'?')} · ${esc(n.updatedAt||'')}</span></span>
+        <button class="del-small" data-delnote="${n.id}">✕ section</button>
+      </div>
+      <div class="blocks">${n.blocks.map(blockHtml).join('') || '<div class="empty">Section vide — ajoute un bloc ci-dessous.</div>'}</div>
+      <div class="add-block-row">
+        <button class="btn ghost small" data-addblock="text">+ Texte</button>
+        <button class="btn ghost small" data-addblock="image">+ Image / schéma</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function touchNote(n){ n.updatedBy = myName; n.updatedAt = now(); }
+
+document.getElementById('noteList').addEventListener('click', async e => {
+  const card = e.target.closest('.note-card');
+  if(!card) return;
+  const n = notes.find(x => x.id === card.dataset.id);
+
+  if(e.target.dataset.delnote){
+    notes = notes.filter(x => x.id !== e.target.dataset.delnote);
+    await safeSet(STORE_NOTES, notes, true); renderNotes(); renderDashboard(); return;
+  }
+  if(e.target.dataset.addblock){
+    const type = e.target.dataset.addblock;
+    n.blocks.push(type === 'text' ? {id:uid(), type:'text', content:''} : {id:uid(), type:'image', url:'', caption:'', scale:''});
+    await touchNote(n); await safeSet(STORE_NOTES, notes, true); renderNotes(); return;
+  }
+  if(e.target.dataset.delblock){
+    n.blocks = n.blocks.filter(b => b.id !== e.target.dataset.delblock);
+    await touchNote(n); await safeSet(STORE_NOTES, notes, true); renderNotes(); return;
+  }
+});
+
+let noteSaveTimer = null;
+document.getElementById('noteList').addEventListener('input', e => {
+  const card = e.target.closest('.note-card');
+  if(!card) return;
+  const n = notes.find(x => x.id === card.dataset.id);
+  const blockEl = e.target.closest('.block');
+  const b = n.blocks.find(x => x.id === blockEl.dataset.bid);
+
+  if(e.target.classList.contains('raw')){
+    b.content = e.target.value;
+    blockEl.querySelector('.rendered').innerHTML = renderMd(b.content);
+  } else if(e.target.dataset.field){
+    b[e.target.dataset.field] = e.target.value;
+    const fig = blockEl.querySelector('.sci-figure');
+    const label = 'Fig.';
+    fig.innerHTML = (b.url ? `<img src="${esc(b.url)}" alt="${esc(b.caption||'')}">` : `<div style="padding:30px;color:var(--ink-soft);font-style:italic;">Ajoute une URL d'image ci-dessus…</div>`)
+      + `<figcaption><span class="fig-label">${label}</span> — ${esc(b.caption||'sans légende')}${b.scale ? `<span class="scale">${esc(b.scale)}</span>` : ''}</figcaption>`;
+  }
+  touchNote(n);
+  clearTimeout(noteSaveTimer);
+  noteSaveTimer = setTimeout(() => safeSet(STORE_NOTES, notes, true), 600);
+});
+
+init();
+</script>
+</body>
+</html>
