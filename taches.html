@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carnet de projet — Tâches</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 4h8" stroke="#D9A441" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M17.5 5v9.5L9 31c-1.4 2.6.5 5.5 3.4 5.5h15.2c2.9 0 4.8-2.9 3.4-5.5l-8.5-16.5V5" stroke="#EFE9D8" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M11.5 26h17" stroke="#D9A441" stroke-width="2"/>
+    </svg>
+    <div class="brand-text">Carnet de<br>projet</div>
+  </div>
+  <nav class="mainnav">
+    <a href="index.html">Tableau de bord</a>
+    <a href="taches.html" class="active">Tâches</a>
+    <a href="bibliographie.html">Bibliographie</a>
+    <a href="notes.html">Méthodes &amp; rapports</a>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="who" id="whoBox"></div>
+  </div>
+</aside>
+
+<main class="content">
+  <div class="page-head">
+    <span class="eyebrow">Suivi</span>
+    <h1>Tâches</h1>
+    <p class="sub">Ce qui reste à faire, qui s'en occupe, et pour quand.</p>
+  </div>
+
+  <div class="card">
+    <form class="inline" id="taskForm">
+      <input type="text" id="taskTitle" placeholder="Nouvelle tâche…" required>
+      <input type="date" id="taskDue">
+      <select id="taskWho"><option value="">Assigné à…</option></select>
+      <button type="submit">Ajouter</button>
+    </form>
+    <ul class="task-list" id="taskList"><li class="empty">Chargement…</li></ul>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
+<script src="taches.js"></script>
+</body>
+</html>
